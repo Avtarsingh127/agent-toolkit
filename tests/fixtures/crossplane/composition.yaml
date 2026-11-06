@@ -1,0 +1,11 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: postgresdb-gcp
+spec:
+  compositeTypeRef: {apiVersion: platform.example.org/v1alpha1, kind: PostgresDB}
+  mode: Pipeline
+  pipeline:
+    - step: resources
+      functionRef: {name: function-go-templating}
+      input: {}

@@ -1,0 +1,72 @@
+{
+  "_comment": "Rendered by tools/toolkit.py into build/claude/settings.fragment.json and merged into ~/.claude/settings.json. Tokens: __PYTHON__, __REPO__. hooks_by_component keys match toolkit.yaml components.hooks.",
+  "permissions": {
+    "allow": [
+      "Bash(terraform fmt *)", "Bash(terraform validate *)", "Bash(terraform init -backend=false *)",
+      "Bash(terraform plan *)", "Bash(terraform show *)", "Bash(terraform providers *)",
+      "Bash(terraform output *)", "Bash(terraform version)", "Bash(terraform test *)",
+      "Bash(terragrunt hcl *)", "Bash(terragrunt find *)", "Bash(terragrunt list *)", "Bash(terragrunt dag *)",
+      "Bash(terragrunt render *)", "Bash(terragrunt info *)", "Bash(terragrunt --version)",
+      "Bash(terragrunt run * plan *)", "Bash(terragrunt run * plan)", "Bash(terragrunt plan *)",
+      "Bash(terragrunt run -- validate *)", "Bash(terragrunt run -- show *)", "Bash(terragrunt run -- output *)",
+      "Bash(tflint *)", "Bash(trivy config *)", "Bash(checkov *)",
+      "Bash(crossplane composition render *)", "Bash(crossplane render *)", "Bash(crossplane beta render *)",
+      "Bash(crossplane resource validate *)", "Bash(crossplane beta validate *)",
+      "Bash(crossplane resource trace *)", "Bash(crossplane beta trace *)", "Bash(crossplane --version)",
+      "Bash(crossplane xpkg build *)", "Bash(crossplane xpkg init *)",
+      "Bash(gcloud * list *)", "Bash(gcloud * describe *)", "Bash(gcloud config get-value *)",
+      "Bash(gcloud config list *)", "Bash(gcloud logging read *)", "Bash(gcloud asset search-all-resources *)",
+      "Bash(bq show *)", "Bash(bq ls *)",
+      "Bash(kubectl get *)", "Bash(kubectl describe *)", "Bash(kubectl logs *)", "Bash(kubectl top *)",
+      "Bash(kubectl diff *)", "Bash(kubectl explain *)", "Bash(kubectl events *)",
+      "Bash(kubectl config current-context)", "Bash(kubectl config get-contexts *)", "Bash(kubectl auth can-i *)",
+      "Bash(helm template *)", "Bash(helm lint *)", "Bash(helm list *)", "Bash(kustomize build *)", "Bash(kubeconform *)",
+      "Bash(argocd app get *)", "Bash(argocd app diff *)", "Bash(argocd app list *)",
+      "Bash(git status *)", "Bash(git diff *)", "Bash(git log *)", "Bash(git show *)", "Bash(git branch *)", "Bash(git fetch *)",
+      "Bash(glab mr view *)", "Bash(glab mr diff *)", "Bash(glab ci status *)",
+      "Bash(ruff *)", "Bash(mypy *)", "Bash(pytest *)", "Bash(python -m pytest *)", "Bash(uv run pytest *)", "Bash(jq *)", "Bash(yq *)",
+      "WebFetch(domain:registry.terraform.io)", "WebFetch(domain:developer.hashicorp.com)",
+      "WebFetch(domain:docs.terragrunt.com)", "WebFetch(domain:docs.crossplane.io)", "WebFetch(domain:marketplace.upbound.io)",
+      "WebFetch(domain:cloud.google.com)", "WebFetch(domain:kubernetes.io)", "WebFetch(domain:docs.python.org)"
+    ],
+    "ask": [
+      "Bash(terraform apply *)", "Bash(terraform import *)", "Bash(terraform init -upgrade *)",
+      "Bash(terragrunt * apply *)", "Bash(terragrunt apply *)", "Bash(terragrunt * import *)",
+      "Bash(crossplane xpkg push *)", "Bash(crossplane xpkg install *)",
+      "Bash(gcloud * create *)", "Bash(gcloud * delete *)", "Bash(gcloud * update *)", "Bash(gcloud * deploy *)",
+      "Bash(gcloud * set-iam-policy *)", "Bash(gcloud * add-iam-policy-binding *)", "Bash(gcloud * remove-iam-policy-binding *)",
+      "Bash(kubectl apply *)", "Bash(kubectl create *)", "Bash(kubectl delete *)", "Bash(kubectl patch *)", "Bash(kubectl scale *)",
+      "Bash(kubectl annotate *)", "Bash(kubectl label *)",
+      "Bash(helm install *)", "Bash(helm upgrade *)", "Bash(helm uninstall *)",
+      "Bash(argocd app sync *)", "Bash(git push *)", "Bash(glab mr create *)"
+    ],
+    "deny": [
+      "Bash(terraform destroy *)", "Bash(terraform state rm *)", "Bash(terraform state push *)", "Bash(terraform force-unlock *)",
+      "Bash(terragrunt * destroy *)", "Bash(terragrunt destroy *)",
+      "Bash(gcloud projects delete *)", "Bash(git push --force *)",
+      "Read(**/.env)", "Read(**/.env.*)", "Read(**/*.tfstate)", "Read(**/*.tfstate.backup)",
+      "Read(**/*.pem)", "Read(**/*.p12)", "Read(**/*sa-key*.json)", "Read(**/credentials.json)",
+      "Read(~/.config/gcloud/**)", "Read(~/.kube/config)", "Read(~/.ssh/**)"
+    ]
+  },
+  "hooks_by_component": {
+    "session-context": {
+      "SessionStart": [
+        {"matcher": "startup|resume|clear|compact",
+         "hooks": [{"type": "command", "command": "__PYTHON__ \"__REPO__/hooks/session_context.py\" --target claude", "timeout": 10}]}
+      ]
+    },
+    "guard": {
+      "PreToolUse": [
+        {"matcher": "Bash",
+         "hooks": [{"type": "command", "command": "__PYTHON__ \"__REPO__/hooks/pre_bash_guard.py\" --target claude", "timeout": 15}]}
+      ]
+    },
+    "post-edit": {
+      "PostToolUse": [
+        {"matcher": "Edit|Write|MultiEdit",
+         "hooks": [{"type": "command", "command": "__PYTHON__ \"__REPO__/hooks/post_edit_check.py\" --target claude", "timeout": 90}]}
+      ]
+    }
+  }
+}

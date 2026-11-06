@@ -1,0 +1,9 @@
+{
+  "_comment": "Optional. Claude Code reads <repo>/.mcp.json; Antigravity reads <repo>/.agents/mcp_config.json (same mcpServers shape; remote servers use serverUrl there). Pin the image tag you reviewed.",
+  "mcpServers": {
+    "terraform": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server:<pinned-version>"]
+    }
+  }
+}

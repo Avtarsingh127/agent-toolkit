@@ -1,0 +1,15 @@
+{
+  "_comment": "Your private overrides (this copy lives at ~/.config/agent-toolkit/guardrails.json, outside the repo). Replace the examples with your real naming. _extra keys append to the toolkit defaults.",
+  "prod": {
+    "gcp_project_patterns_extra": [],
+    "kube_context_patterns_extra": [],
+    "path_patterns_extra": []
+  },
+  "_examples": {
+    "prod": {
+      "gcp_project_patterns_extra": ["^acme-[a-z0-9]+-p$"],
+      "kube_context_patterns_extra": ["^gke_acme-[a-z0-9]+-p_"],
+      "path_patterns_extra": ["(^|/)live/prd-"]
+    }
+  }
+}

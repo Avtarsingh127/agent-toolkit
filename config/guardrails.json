@@ -1,0 +1,144 @@
+{
+  "_comment": "Toolkit defaults (versioned). Put your real prod naming in ~/.config/agent-toolkit/guardrails.json and repo-specific rules in <repo>/.agents/guardrails.json or <repo>/.claude/guardrails.json. Dicts deep-merge, lists replace, keys ending in _extra append. Patterns are Python regexes, matched case-insensitively.",
+
+  "prod": {
+    "gcp_project_patterns": ["(^|[-_/.])prod($|[-_/.])", "(^|[-_/.])prd($|[-_/.])"],
+    "kube_context_patterns": ["prod", "prd"],
+    "path_patterns": ["(^|/)(prod|prd|production)(/|$)"],
+    "resolve_active_gcloud_project": true,
+    "resolve_active_kube_context": true,
+    "resolve_timeout_seconds": 3
+  },
+
+  "hard_block": [
+    {"pattern": "\\bterraform\\b.*\\bdestroy\\b", "reason": "terraform destroy is never run by the agent. Run it yourself after review."},
+    {"pattern": "\\bterraform\\b.*\\bapply\\b.*-auto-approve", "reason": "apply -auto-approve is blocked. Produce a saved plan and let a human or the pipeline apply it."},
+    {"pattern": "\\bterraform\\b.*\\bstate\\s+(rm|push|mv|replace-provider)\\b", "reason": "State surgery needs four-eye review. Put the command in the MR instead of running it."},
+    {"pattern": "\\bterraform\\b.*\\bforce-unlock\\b", "reason": "force-unlock can corrupt state. Confirm nobody holds the lock, then run it yourself."},
+    {"pattern": "\\bterragrunt\\b.*\\bdestroy\\b", "reason": "terragrunt destroy is never run by the agent."},
+    {"pattern": "\\bterragrunt\\b.*(--all|run-all)\\b.*\\bapply\\b|\\bterragrunt\\b.*\\bapply\\b.*(--all|run-all)\\b", "reason": "terragrunt --all apply auto-approves every unit. Apply through the pipeline."},
+    {"pattern": "\\bterragrunt\\b.*-auto-approve", "reason": "auto-approve is blocked. Produce plans with --out-dir and let a human or the pipeline apply them."},
+    {"pattern": "\\bterragrunt\\b.*\\bstate\\s+(rm|push|mv|replace-provider)\\b", "reason": "State surgery needs four-eye review."},
+    {"pattern": "\\bkubectl\\b.*\\bdelete\\b.*\\b(compositeresourcedefinitions?|xrds?|compositions?|compositionrevisions?|providers?(\\.pkg\\.crossplane\\.io)?|functions?(\\.pkg\\.crossplane\\.io)?|configurations?|managed|composite|claim|managedresourceactivationpolic(y|ies)|mrap|usages?)\\b", "reason": "Deleting Crossplane APIs, packages or managed/composite resources can delete real cloud resources. Remove them through Git so the change is reviewed."},
+    {"pattern": "\\bkubectl\\b.*\\bdelete\\b.*\\.(m\\.)?(upbound|crossplane)\\.io\\b", "reason": "Deleting a Crossplane managed resource deletes the cloud resource unless deletionPolicy is Orphan. Do it through Git."},
+    {"pattern": "\\bkubectl\\b.*\\bdelete\\b.*\\b(namespace|ns|pvc|pv|crd|customresourcedefinitions?)\\b", "reason": "Deleting namespaces, volumes or CRDs is blocked."},
+    {"pattern": "\\bkubectl\\b.*\\bdelete\\b.*(--all\\b|-A\\b|--all-namespaces)", "reason": "Bulk deletes are blocked."},
+    {"pattern": "\\bgcloud\\b.*\\bprojects\\s+delete\\b", "reason": "Project deletion is blocked."},
+    {"pattern": "\\b(gsutil|gcloud\\s+storage)\\b.*\\brm\\b.*(-r|--recursive)", "reason": "Recursive bucket deletes are blocked."},
+    {"pattern": "\\bgit\\s+push\\b.*(--force\\b|-f\\b|--force-with-lease)", "reason": "Force-push is blocked."}
+  ],
+
+  "prod_mutations": {
+    "_comment": "When a command matches one of these and targets a prod project/context/path, the agent must ask. Read-only verbs never match.",
+    "gcloud": "\\bgcloud\\b.*\\b(create|delete|update|patch|deploy|resize|set-iam-policy|add-iam-policy-binding|remove-iam-policy-binding|import|restore|failover|promote|stop|start|reset)\\b",
+    "bq": "\\bbq\\b.*\\b(rm|mk|update|cp|load)\\b|\\bbq\\b.*\\bquery\\b.*\\b(DELETE|UPDATE|INSERT|MERGE|DROP|TRUNCATE|ALTER)\\b",
+    "kubectl": "\\bkubectl\\b.*\\b(apply|create|delete|patch|edit|replace|scale|drain|cordon|uncordon|taint|annotate|label|set)\\b|\\bkubectl\\b.*\\brollout\\s+(restart|undo)\\b",
+    "helm": "\\bhelm\\b.*\\b(install|upgrade|uninstall|rollback)\\b",
+    "crossplane": "\\bcrossplane\\b.*\\b(xpkg\\s+(push|install|update)|beta\\s+upgrade)\\b",
+    "terraform": "\\bterraform\\b.*\\b(apply|import)\\b",
+    "terragrunt": "\\bterragrunt\\b.*\\b(apply|import)\\b",
+    "argocd": "\\bargocd\\b.*\\bapp\\s+(sync|delete|rollback|set|patch)\\b"
+  },
+
+  "post_edit": {
+    "_comment": "fix = run silently in order (formatters, safe auto-fixes). check = its failures go back to the agent (Claude only), capped. {file} = edited path, {dir} = its directory. Missing binaries are skipped. Unused-import removal is skipped on purpose: agents often add an import one edit before using it.",
+    "max_feedback_lines": 25,
+    "languages": {
+      "terraform": {"enabled": true, "globs": ["*.tf", "*.tfvars", "*.tftest.hcl"],
+                    "fix": [["terraform", "fmt", "{file}"]],
+                    "check": ["terraform", "fmt", "-check", "-no-color", "{file}"]},
+      "terragrunt": {"enabled": true, "globs": ["terragrunt.hcl", "root.hcl", "terragrunt.stack.hcl", "terragrunt.values.hcl"],
+                     "fix": [["terragrunt", "hcl", "fmt", "--file", "{file}"]],
+                     "check": []},
+      "python": {"enabled": true, "globs": ["*.py", "*.pyi"],
+                 "fix": [["ruff", "check", "--fix", "--unfixable", "F401", "--quiet", "{file}"], ["ruff", "format", "--quiet", "{file}"]],
+                 "check": ["ruff", "check", "--quiet", "--ignore", "F401", "--output-format=concise", "{file}"]},
+      "shell": {"enabled": true, "globs": ["*.sh", "*.bash"], "fix": [],
+                "check": ["shellcheck", "-f", "gcc", "{file}"]},
+      "yaml": {"enabled": false, "globs": ["*.yaml", "*.yml"], "fix": [],
+               "check": ["yamllint", "-f", "parsable", "{file}"]}
+    }
+  },
+
+  "review": {
+    "base_ref": "origin/main",
+    "max_diff_lines": 1500,
+    "exclude_globs": ["*.lock", "*.lock.hcl", "**/vendor/**", "**/*.min.js", "**/*.tfstate*", "**/.terragrunt-cache/**"]
+  },
+
+  "plan_summary": {
+    "max_listed_per_action": 40,
+    "plan_json_name": "tfplan.json",
+    "risky_resource_types": [
+      "google_project_iam_binding", "google_project_iam_member", "google_project_iam_policy",
+      "google_organization_iam_binding", "google_organization_iam_member", "google_folder_iam_binding",
+      "google_service_account_key", "google_compute_firewall", "google_storage_bucket_iam_binding",
+      "google_storage_bucket_iam_member", "google_container_cluster", "google_container_node_pool",
+      "google_alloydb_cluster", "google_alloydb_instance", "google_sql_database_instance",
+      "google_kms_crypto_key", "google_dns_record_set", "google_compute_network", "google_compute_subnetwork"
+    ],
+    "risky_attribute_values": {
+      "deletion_protection": [false],
+      "force_destroy": [true],
+      "source_ranges": ["0.0.0.0/0"],
+      "member": ["allUsers", "allAuthenticatedUsers"],
+      "members": ["allUsers", "allAuthenticatedUsers"]
+    }
+  },
+
+  "crossplane": {
+    "_comment": "Commands used by the crossplane-dev skill's check script. CLI subcommands moved between versions: v2.0-2.2 used `crossplane render` / `crossplane beta validate`; newer CLIs use the forms below. Set these to match `crossplane --help`.",
+    "render": ["crossplane", "composition", "render", "{xr}", "{composition}", "{functions}", "--include-function-results"],
+    "render_extra_flags": {"observed": "--observed-resources={path}", "required": "--required-resources={path}", "context": "--context-files={value}"},
+    "validate": ["crossplane", "resource", "validate", "{extensions}", "-", "--skip-success-results"],
+    "risky_kinds_without_orphan": ["DatabaseInstance", "Cluster", "Instance", "Bucket", "CryptoKey", "KeyRing", "Network", "Subnetwork"]
+  },
+
+  "discuss": {
+    "_comment": "Used by the discuss skill's repo_map.py. Limits keep the map small on big monorepos. Patterns with a slash match the relative path, others the file name.",
+    "notes_dir": ".agents/notes",
+    "max_depth": 2,
+    "max_tree_lines": 60,
+    "max_files_scanned": 20000,
+    "max_key_files": 25,
+    "key_file_max_depth": 2,
+    "recent_commits": 8,
+    "hot_dirs_days": 90,
+    "hot_dirs_depth": 2,
+    "max_hot_dirs": 8,
+    "exclude_dirs": [".git", ".terraform", ".terragrunt-cache", "node_modules", ".venv", "venv", "__pycache__", "vendor", "dist", "build", "target", ".idea", ".vscode"],
+    "include_hidden_dirs": [".github", ".gitlab", ".agents", ".claude", ".argocd"],
+    "key_files": ["README*", "AGENTS.md", "CLAUDE.md", "GEMINI.md", "ARCHITECTURE*", "Makefile", "Taskfile.yml", "justfile",
+                  "pyproject.toml", "go.mod", "package.json", "Dockerfile", "docker-compose*.y*ml", "root.hcl", "terragrunt.stack.hcl",
+                  "Chart.yaml", "kustomization.yaml", "crossplane.yaml", ".gitlab-ci.yml", ".github/workflows/*", "Jenkinsfile", "cloudbuild.yaml",
+                  "skaffold.yaml", "docs/adr/*", "adr/*"],
+    "signals": {
+      "Terraform": ["*.tf"],
+      "Terragrunt": ["terragrunt.hcl", "root.hcl", "*.stack.hcl"],
+      "Crossplane": ["xrd*.yaml", "composition*.yaml", "definition.yaml", "crossplane.yaml", "functions.yaml"],
+      "Helm": ["Chart.yaml"],
+      "Kustomize": ["kustomization.yaml"],
+      "Argo CD": ["argocd/*", "*applicationset*.yaml", "*application*.yaml"],
+      "Python": ["*.py"],
+      "Go": ["*.go"],
+      "Java": ["*.java", "pom.xml", "build.gradle*"],
+      "TypeScript/JavaScript": ["*.ts", "*.js"],
+      "Shell": ["*.sh"],
+      "Containers": ["Dockerfile", "Dockerfile.*", "*.Dockerfile"],
+      "CI": [".gitlab-ci.yml", ".github/workflows/*", "Jenkinsfile", "cloudbuild.yaml"],
+      "Docs": ["*.md"]
+    }
+  },
+
+  "session_context": {"enabled": true},
+
+  "hook_env": {
+    "_comment": "Appended to PATH inside hooks when missing (GUI-launched agents often lack Homebrew paths).",
+    "extra_path": ["/opt/homebrew/bin", "/usr/local/bin", "~/.local/bin", "~/google-cloud-sdk/bin", "/opt/homebrew/share/google-cloud-sdk/bin"]
+  },
+
+  "antigravity": {
+    "_comment": "Decision returned by PreToolUse when the guard has no objection. 'allow' hands the call back to Antigravity's normal permission flow; 'auto_approve' would skip prompts (not recommended).",
+    "pre_tool_default_decision": "allow"
+  }
+}

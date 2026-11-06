@@ -1,0 +1,4 @@
+apiVersion: platform.example.org/v1alpha1
+kind: PostgresDB
+metadata: {name: orders, namespace: team-a}
+spec: {size: small}

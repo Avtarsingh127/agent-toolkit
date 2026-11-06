@@ -1,0 +1,12 @@
+{"format_version":"1.2","resource_changes":[
+ {"address":"google_alloydb_cluster.main","mode":"managed","type":"google_alloydb_cluster","change":{"actions":["delete","create"],"before":{"network_config":[{"network":"a"}]},"after":{"network_config":[{"network":"b"}],"deletion_protection":false},"after_unknown":{"id":true},"after_sensitive":{}},"replace_paths":[["network_config",0,"network"]]},
+ {"address":"google_compute_firewall.allow_ssh","mode":"managed","type":"google_compute_firewall","change":{"actions":["create"],"before":null,"after":{"name":"ssh","source_ranges":["0.0.0.0/0"]},"after_unknown":{"id":true},"after_sensitive":{}}},
+ {"address":"google_project_iam_member.viewer","mode":"managed","type":"google_project_iam_member","change":{"actions":["update"],"before":{"role":"roles/viewer","member":"group:a@x.com"},"after":{"role":"roles/editor","member":"group:a@x.com"},"after_unknown":{},"after_sensitive":{}}},
+ {"address":"google_storage_bucket_iam_member.public","mode":"managed","type":"google_storage_bucket_iam_member","change":{"actions":["create"],"before":null,"after":{"member":"allUsers","role":"roles/storage.objectViewer"},"after_unknown":{},"after_sensitive":{}}},
+ {"address":"google_secret_manager_secret_version.pw","mode":"managed","type":"google_secret_manager_secret_version","change":{"actions":["update"],"before":{"secret_data":"x"},"after":{"secret_data":"y"},"after_unknown":{},"after_sensitive":{"secret_data":true}}},
+ {"address":"google_container_node_pool.gpu[\"a100\"]","mode":"managed","type":"google_container_node_pool","change":{"actions":["no-op"],"before":{},"after":{"node_config":[{"labels":{"x":"y"}}]},"after_unknown":{},"after_sensitive":{}}},
+ {"address":"google_sql_database_instance.old","mode":"managed","type":"google_sql_database_instance","change":{"actions":["delete"],"before":{"name":"old"},"after":null,"after_unknown":{},"after_sensitive":false}},
+ {"address":"data.google_project.p","mode":"data","type":"google_project","change":{"actions":["read"]}}
+],
+"resource_drift":[{"address":"google_compute_subnetwork.s","change":{"actions":["update"]}}],
+"output_changes":{"cluster_id":{"actions":["update"]},"x":{"actions":["no-op"]}}}

@@ -1,0 +1,6 @@
+{
+  "permissions": {
+    "allow": ["Bash(uv run *)"],
+    "deny": ["Read(./**/secrets*.tfvars)", "Read(./**/secrets*.hcl)"]
+  }
+}

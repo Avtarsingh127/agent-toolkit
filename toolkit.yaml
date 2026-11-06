@@ -1,0 +1,58 @@
+# agent-toolkit: what gets installed where.
+#
+# Machine-specific overrides go in toolkit.local.yaml next to this file (git-ignored).
+# It is deep-merged over this file: maps merge, lists replace.
+# Paths may use ~ and $ENV_VARS.
+
+targets:
+  claude:
+    enabled: true
+    home: ~/.claude
+    instructions_file: ~/.claude/CLAUDE.md
+    rules_dir: ~/.claude/rules
+    skills_dir: ~/.claude/skills
+    agents_dir: ~/.claude/agents
+    settings_file: ~/.claude/settings.json
+    # Placeholder {{SKILL_DIR}} in skill bodies becomes this for Claude:
+    skill_dir_token: "${CLAUDE_SKILL_DIR}"
+    # Placeholder {{ARGS}} (what you typed after /skill-name) becomes:
+    args_token: "$ARGUMENTS"
+
+  antigravity:
+    enabled: true
+    # Official global locations (App, IDE and CLI). See docs/antigravity.md for alternatives.
+    instructions_file: ~/.gemini/config/AGENTS.md
+    rules_dir: ~/.gemini/config/rules
+    skills_dir: ~/.gemini/config/skills
+    hooks_file: ~/.gemini/config/hooks.json
+    # {{SKILL_DIR}} becomes the installed skill path; {{ARGS}} becomes this phrase:
+    args_token: "the topic given with this request"
+    # Antigravity CLI permissions (the App's are set in Settings > General > Global Permissions).
+    cli_settings_file: ~/.gemini/antigravity-cli/settings.json
+    manage_cli_permissions: true
+
+# Choose what to install. "*" = everything in the folder; exclude wins over include.
+# Per-target lists override these.
+components:
+  rules:   {include: ["*"], exclude: []}
+  skills:  {include: ["*"], exclude: []}
+  agents:  {include: ["*"], exclude: []}   # Claude only: Antigravity defines subagents at runtime
+  hooks:   {include: ["guard", "post-edit", "session-context"], exclude: []}
+
+# Per-target component overrides, e.g. keep a skill out of Antigravity:
+# target_components:
+#   antigravity:
+#     skills: {include: ["*"], exclude: ["handoff"]}
+
+# Where the guardrails config used by the hooks lives. Repo defaults first,
+# then a private local file (git-ignored, for your real prod naming), then the
+# repo you are working in (.agents/guardrails.json or .claude/guardrails.json).
+guardrails:
+  defaults: config/guardrails.json
+  local: ~/.config/agent-toolkit/guardrails.json
+
+# Python used to run hooks. Hooks are stdlib-only, so the system python3 is fine.
+python: python3
+
+# Where install.py moves files it replaces when you pass --force.
+backup_dir: ~/.agent-toolkit-backups

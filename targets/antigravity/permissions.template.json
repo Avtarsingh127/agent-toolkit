@@ -1,0 +1,46 @@
+{
+  "_comment": "Merged into the Antigravity CLI settings (permissions.allow/ask/deny). The App has no settings file: paste these into Settings > General > Global Permissions. Evaluation order is Deny > Ask > Allow. command(x) matches by word prefix; command(regex:...) by regular expression. Token: __HOME__.",
+  "permissions": {
+    "allow": [
+      "command(terraform fmt)", "command(terraform validate)", "command(terraform plan)", "command(terraform show)",
+      "command(terraform providers)", "command(terraform output)", "command(terraform version)", "command(terraform test)",
+      "command(terraform init -backend=false)",
+      "command(terragrunt hcl)", "command(terragrunt find)", "command(terragrunt list)", "command(terragrunt dag)",
+      "command(terragrunt render)", "command(terragrunt plan)",
+      "command(regex:^terragrunt run (--all )?(--filter[= ]\\S+ )*(--out-dir[= ]\\S+ |--json-out-dir[= ]\\S+ )*plan( .*)?$)",
+      "command(tflint)", "command(trivy config)", "command(checkov)",
+      "command(crossplane composition render)", "command(crossplane render)", "command(crossplane beta render)",
+      "command(crossplane resource validate)", "command(crossplane beta validate)",
+      "command(crossplane resource trace)", "command(crossplane beta trace)", "command(crossplane xpkg build)",
+      "command(regex:^gcloud( [a-z0-9-]+)+ (list|describe)( .*)?$)", "command(gcloud config get-value)",
+      "command(gcloud config list)", "command(gcloud logging read)",
+      "command(bq show)", "command(bq ls)",
+      "command(kubectl get)", "command(kubectl describe)", "command(kubectl logs)", "command(kubectl top)",
+      "command(kubectl diff)", "command(kubectl explain)", "command(kubectl events)",
+      "command(kubectl config current-context)", "command(kubectl config get-contexts)", "command(kubectl auth can-i)",
+      "command(helm template)", "command(helm lint)", "command(helm list)", "command(kustomize build)", "command(kubeconform)",
+      "command(argocd app get)", "command(argocd app diff)", "command(argocd app list)",
+      "command(git status)", "command(git diff)", "command(git log)", "command(git show)", "command(git branch)", "command(git fetch)",
+      "command(glab mr view)", "command(glab mr diff)", "command(glab ci status)",
+      "command(ruff)", "command(mypy)", "command(pytest)", "command(uv run pytest)", "command(jq)", "command(yq)",
+      "read_url(registry.terraform.io)", "read_url(developer.hashicorp.com)", "read_url(docs.terragrunt.com)",
+      "read_url(docs.crossplane.io)", "read_url(cloud.google.com)", "read_url(kubernetes.io)"
+    ],
+    "ask": [
+      "command(terraform apply)", "command(terraform import)",
+      "command(regex:^terragrunt .*\\bapply\\b.*)", "command(crossplane xpkg push)",
+      "command(regex:^gcloud .*\\b(create|delete|update|deploy|set-iam-policy|add-iam-policy-binding|remove-iam-policy-binding)\\b.*)",
+      "command(kubectl apply)", "command(kubectl create)", "command(kubectl delete)", "command(kubectl patch)",
+      "command(kubectl scale)", "command(kubectl annotate)", "command(kubectl label)",
+      "command(helm install)", "command(helm upgrade)", "command(helm uninstall)",
+      "command(argocd app sync)", "command(git push)", "command(glab mr create)"
+    ],
+    "deny": [
+      "command(terraform destroy)", "command(regex:^terraform .*\\bdestroy\\b.*)", "command(terraform state rm)",
+      "command(terraform state push)", "command(terraform force-unlock)",
+      "command(regex:^terragrunt .*\\bdestroy\\b.*)", "command(gcloud projects delete)",
+      "command(git push --force)", "command(git push -f)",
+      "read_file(__HOME__/.config/gcloud)", "read_file(__HOME__/.kube/config)", "read_file(__HOME__/.ssh)"
+    ]
+  }
+}

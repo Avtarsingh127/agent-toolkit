@@ -1,0 +1,14 @@
+{
+  "_comment": "Repo-level guardrails, deep-merged over the toolkit defaults and your local file. Lists REPLACE; keys ending in _extra APPEND (safer). This file is a no-op until you fill the _extra lists.",
+  "prod": {
+    "gcp_project_patterns_extra": [],
+    "kube_context_patterns_extra": [],
+    "path_patterns_extra": []
+  },
+  "hard_block_extra": [],
+  "_examples": {
+    "prod": {"path_patterns_extra": ["(^|/)live/prod(/|$)"]},
+    "hard_block_extra": [{"pattern": "\\bterragrunt\\b.*live/prod", "reason": "Prod units are applied only by the protected pipeline."}]
+  },
+  "review": {"base_ref": "origin/main"}
+}

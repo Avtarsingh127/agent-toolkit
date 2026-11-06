@@ -1,0 +1,28 @@
+{
+  "_comment": "Rendered into build/antigravity/hooks.fragment.json and merged into ~/.gemini/config/hooks.json. Every hook name starts with agent-toolkit- so install/uninstall only touch ours. Format: https://antigravity.google/docs/hooks",
+  "hooks_by_component": {
+    "session-context": {
+      "agent-toolkit-session-context": {
+        "SessionStart": [
+          {"type": "command", "command": "__PYTHON__ \"__REPO__/hooks/session_context.py\" --target antigravity", "timeout": 10}
+        ]
+      }
+    },
+    "guard": {
+      "agent-toolkit-guard": {
+        "PreToolUse": [
+          {"matcher": "run_command",
+           "hooks": [{"type": "command", "command": "__PYTHON__ \"__REPO__/hooks/pre_bash_guard.py\" --target antigravity", "timeout": 15}]}
+        ]
+      }
+    },
+    "post-edit": {
+      "agent-toolkit-post-edit": {
+        "PostToolUse": [
+          {"matcher": "write_to_file|replace_file_content|multi_replace_file_content",
+           "hooks": [{"type": "command", "command": "__PYTHON__ \"__REPO__/hooks/post_edit_check.py\" --target antigravity", "timeout": 90}]}
+        ]
+      }
+    }
+  }
+}
